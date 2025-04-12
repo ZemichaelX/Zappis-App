@@ -72,18 +72,10 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
       );
       _selectedTabIndex = _fastChargers.contains(_selectedCharger) ? 0 : 1;
     } else {
-      // Default to first available charger type
-      if (_fastChargers.isNotEmpty) {
-        _selectedCharger = _fastChargers.first;
-        _selectedTabIndex = 0;
-      } else if (_standardChargers.isNotEmpty) {
-        _selectedCharger = _standardChargers.first;
-        _selectedTabIndex = 1;
-      } else {
-        // Fallback to first charger if no categorization
-        _selectedCharger = widget.station.chargers.first;
-        _selectedTabIndex = 0;
-      }
+      _selectedCharger = _fastChargers.isNotEmpty
+          ? _fastChargers.first
+          : _standardChargers.first;
+      _selectedTabIndex = _fastChargers.isNotEmpty ? 0 : 1;
     }
 
     // Initialize battery percentages if provided
@@ -162,57 +154,149 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Padding(
-              padding: EdgeInsets.all(16),
+      child: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: DefaultTabController(
+              length: 2,
+              initialIndex: _selectedTabIndex,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DefaultTabController(
-                    length: 2,
-                    child: Column(
-                      children: [
-                        TabBar(
-                          tabs: const [
-                            Tab(text: 'Fast Charging'),
-                            Tab(text: 'Standard Charging'),
-                          ],
-                          labelColor: Theme.of(context).primaryColor,
-                          unselectedLabelColor: Colors.grey,
-                          indicatorColor: Theme.of(context).primaryColor,
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildChargerInfo(
-                              Icons.attach_money,
-                              'Estimated Cost',
-                              '${_chargingCost.toStringAsFixed(2)} Birr',
-                            ),
-                            _buildChargerInfo(
-                              Icons.timer,
-                              'Charging Time',
-                              _formatDuration(_chargingTime * 60),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        _buildBatteryLevelSliders(),
-                        const SizedBox(height: 24),
-                        CustomButton(
-                          text: 'Next',
-                          onPressed: () {
-                            _showDateTimeSelection(context);
-                          },
-                        ),
-                      ],
+                  TabBar(
+                    onTap: (index) {
+                      setState(() {
+                        _selectedTabIndex = index;
+                        _selectedCharger =
+                            index == 0 && _fastChargers.isNotEmpty
+                                ? _fastChargers.first
+                                : _standardChargers.first;
+                        _calculateChargingDetails();
+                      });
+                    },
+                    tabs: const [
+                      Tab(text: 'Fast Charging'),
+                      Tab(text: 'Standard Charging'),
+                    ],
+                    labelColor: Theme.of(context).primaryColor,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: Theme.of(context).primaryColor,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          _buildChargersList(),
+                          const SizedBox(height: 16),
+                          _buildBatteryLevelSliders(),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildChargerInfo(
+                                Icons.timer,
+                                'Duration',
+                                _formatDuration(_chargingTime * 60),
+                              ),
+                              _buildChargerInfo(
+                                Icons.attach_money,
+                                'Cost',
+                                '${_chargingCost.toStringAsFixed(2)} Birr',
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          CustomButton(
+                            text: 'Next',
+                            onPressed: () => _showDateTimeSelection(context),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDateTimeSelection(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            _buildHeader('Select Date & Time'),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Select Date',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () => _selectDate(context),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          suffixIcon: Icon(Icons.calendar_today),
+                        ),
+                        child: Text(
+                          DateFormat('EEE, MMM d, yyyy').format(_selectedDate),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Select Time',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () => _selectTime(context),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          suffixIcon: Icon(Icons.access_time),
+                        ),
+                        child: Text(
+                          _selectedTime.format(context),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSummary(),
+                    const Spacer(),
+                    CustomButton(
+                      text: 'Next',
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _showConfirmation(context);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -221,107 +305,59 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
     );
   }
 
-  void _showDateTimeSelection(BuildContext context) {
-    // Implement the second bottom sheet for date and time selection
+  void _showConfirmation(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.8,
+        height: MediaQuery.of(context).size.height * 0.9,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Select Date & Time',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        child: Column(
+          children: [
+            _buildHeader('Confirm Booking'),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildChargerDetails(),
+                    const SizedBox(height: 24),
+                    _buildSummary(),
+                    const Spacer(),
+                    CustomButton(
+                      text: 'Proceed to Payment',
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        PaymentBottomSheet.show(
+                          context,
+                          station: widget.station,
+                          charger: _selectedCharger,
+                          date: _selectedDate,
+                          time: _selectedTime,
+                          currentBatteryPercentage: _currentBatteryPercentage,
+                          targetBatteryPercentage: _targetBatteryPercentage,
+                          batteryCapacity: _batteryCapacity,
+                          chargingTime: _chargingTime,
+                          chargingCost: _chargingCost,
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => _selectDate(context),
-                  child: Text(
-                      'Select Date: ${DateFormat('EEE, MMM d, yyyy').format(_selectedDate)}'),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => _selectTime(context),
-                  child: Text('Select Time: ${_selectedTime.format(context)}'),
-                ),
-                const SizedBox(height: 24),
-                CustomButton(
-                  text: 'Next',
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _showFinalConfirmation(context);
-                  },
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  void _showFinalConfirmation(BuildContext context) {
-    // Implement the final confirmation sheet
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Confirm Booking',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              _buildChargerDetails(),
-              const SizedBox(height: 16),
-              _buildSummary(),
-              const SizedBox(height: 24),
-              CustomButton(
-                text: 'Confirm & Pay',
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  PaymentBottomSheet.show(
-                    context,
-                    station: widget.station,
-                    charger: _selectedCharger,
-                    date: _selectedDate,
-                    time: _selectedTime,
-                    currentBatteryPercentage: _currentBatteryPercentage,
-                    targetBatteryPercentage: _targetBatteryPercentage,
-                    batteryCapacity: _batteryCapacity,
-                    chargingTime: _chargingTime,
-                    chargingCost: _chargingCost,
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
+  Widget _buildHeader([String? title]) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -330,14 +366,14 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.book_online,
+          Icon(
+            title == null ? Icons.book_online : Icons.arrow_back,
             color: Colors.white,
           ),
           const SizedBox(width: 8),
-          const Text(
-            'Book Charging Session',
-            style: TextStyle(
+          Text(
+            title ?? 'Book Charging Session',
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -350,6 +386,35 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildChargersList() {
+    final chargers = _selectedTabIndex == 0 ? _fastChargers : _standardChargers;
+    final prefix = _selectedTabIndex == 0 ? 'Fast' : 'Standard';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Available Chargers',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        ...chargers.map((charger) => RadioListTile<Charger>(
+              title: Text('$prefix - ${charger.type} - ${charger.power} kW'),
+              value: charger,
+              groupValue: _selectedCharger,
+              onChanged: (Charger? value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedCharger = value;
+                    _calculateChargingDetails();
+                  });
+                }
+              },
+            )),
+      ],
     );
   }
 
@@ -409,11 +474,12 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
   }
 
   Widget _buildChargerDetails() {
+    final prefix = _selectedCharger.power >= 50 ? 'Fast' : 'Standard';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Charger Type: ${_selectedCharger.type} - ${_selectedCharger.power} kW',
+          'Charger Type: $prefix - ${_selectedCharger.type} - ${_selectedCharger.power} kW',
           style: const TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 8),

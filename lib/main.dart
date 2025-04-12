@@ -47,8 +47,8 @@ class MyApp extends StatelessWidget {
             Theme.of(context).textTheme,
           ),
           appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF0D8E36),
-            foregroundColor: Colors.white,
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.black,
             elevation: 0,
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(

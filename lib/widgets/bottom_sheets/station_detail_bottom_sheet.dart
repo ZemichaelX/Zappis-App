@@ -354,10 +354,13 @@ class _StationDetailBottomSheetState extends State<StationDetailBottomSheet>
       itemCount: _station!.chargers.length,
       itemBuilder: (context, index) {
         final charger = _station!.chargers[index];
+        final chargerTypePrefix = charger.power >= 50 ? 'Fast' : 'Standard';
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: ChargerCard(
             charger: charger,
+            displayType: '$chargerTypePrefix - ${charger.type}',
+            station: _station!,
             onTap: () {
               BookingBottomSheet.show(
                 context,

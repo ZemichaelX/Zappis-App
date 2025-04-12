@@ -6,7 +6,7 @@ import 'package:zappis/widgets/custom_button.dart';
 
 class ChargingCalculatorBottomSheet extends StatefulWidget {
   final Station station;
-  
+
   const ChargingCalculatorBottomSheet({
     super.key,
     required this.station,
@@ -22,18 +22,20 @@ class ChargingCalculatorBottomSheet extends StatefulWidget {
   }
 
   @override
-  State<ChargingCalculatorBottomSheet> createState() => _ChargingCalculatorBottomSheetState();
+  State<ChargingCalculatorBottomSheet> createState() =>
+      _ChargingCalculatorBottomSheetState();
 }
 
-class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottomSheet> {
+class _ChargingCalculatorBottomSheetState
+    extends State<ChargingCalculatorBottomSheet> {
   Charger? _selectedCharger;
   double _currentBatteryPercentage = 20;
   double _targetBatteryPercentage = 80;
   double _batteryCapacity = 60; // kWh
-  
+
   double _chargingTime = 0;
   double _chargingCost = 0;
-  
+
   @override
   void initState() {
     super.initState();
@@ -42,30 +44,31 @@ class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottom
     }
     _calculateChargingDetails();
   }
-  
+
   void _calculateChargingDetails() {
     if (_selectedCharger == null) return;
-    
+
     // Calculate energy needed in kWh
-    final energyNeeded = _batteryCapacity * (_targetBatteryPercentage - _currentBatteryPercentage) / 100;
-    
+    final energyNeeded = _batteryCapacity *
+        (_targetBatteryPercentage - _currentBatteryPercentage) /
+        100;
+
     // Calculate charging time in hours
     _chargingTime = energyNeeded / _selectedCharger!.power;
-    
+
     // Calculate cost in Birr
     _chargingCost = energyNeeded * widget.station.price;
-    
+
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     return Container(
       height: screenHeight * 0.9,
       decoration: const BoxDecoration(
-        
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -131,7 +134,8 @@ class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottom
                     value: _selectedCharger,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                     items: widget.station.chargers.map((charger) {
                       return DropdownMenuItem<Charger>(
@@ -160,7 +164,8 @@ class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottom
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       suffixText: 'kWh',
                     ),
                     onChanged: (value) {
@@ -194,8 +199,10 @@ class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottom
                           onChanged: (value) {
                             setState(() {
                               _currentBatteryPercentage = value;
-                              if (_currentBatteryPercentage >= _targetBatteryPercentage) {
-                                _targetBatteryPercentage = _currentBatteryPercentage + 5;
+                              if (_currentBatteryPercentage >=
+                                  _targetBatteryPercentage) {
+                                _targetBatteryPercentage =
+                                    _currentBatteryPercentage + 5;
                                 if (_targetBatteryPercentage > 100) {
                                   _targetBatteryPercentage = 100;
                                 }
@@ -236,8 +243,10 @@ class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottom
                           onChanged: (value) {
                             setState(() {
                               _targetBatteryPercentage = value;
-                              if (_targetBatteryPercentage <= _currentBatteryPercentage) {
-                                _currentBatteryPercentage = _targetBatteryPercentage - 5;
+                              if (_targetBatteryPercentage <=
+                                  _currentBatteryPercentage) {
+                                _currentBatteryPercentage =
+                                    _targetBatteryPercentage - 5;
                                 if (_currentBatteryPercentage < 0) {
                                   _currentBatteryPercentage = 0;
                                 }
@@ -297,7 +306,7 @@ class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottom
                     text: 'Book This Charger',
                     onPressed: () {
                       if (_selectedCharger == null) return;
-                      
+
                       Navigator.of(context).pop();
                       BookingBottomSheet.show(
                         context,
@@ -316,7 +325,7 @@ class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottom
       ),
     );
   }
-  
+
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -348,7 +357,7 @@ class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottom
       ),
     );
   }
-  
+
   Widget _buildSummaryRow(String label, String value, {bool isBold = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -363,11 +372,11 @@ class _ChargingCalculatorBottomSheetState extends State<ChargingCalculatorBottom
       ],
     );
   }
-  
+
   String _formatDuration(double minutes) {
     final int hours = minutes ~/ 60;
     final int mins = (minutes % 60).round();
-    
+
     if (hours > 0) {
       return '$hours hr ${mins > 0 ? '$mins min' : ''}';
     } else {

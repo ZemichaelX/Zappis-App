@@ -6,6 +6,7 @@ import 'package:zappis/screens/services_screen.dart';
 import 'package:zappis/screens/profile_screen.dart';
 import 'package:zappis/screens/alerts_screen.dart';
 import 'package:zappis/screens/station_detail_screen.dart';
+import 'package:zappis/screens/charging_calculator_screen.dart';
 import 'package:zappis/widgets/home_header.dart';
 import 'package:zappis/widgets/feature_card.dart';
 import 'package:zappis/widgets/station_card.dart';
@@ -31,39 +32,53 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Theme.of(context).primaryColor,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.ev_station),
-            label: 'Stations',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Bookings',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.map_outlined),
+              selectedIcon: Icon(Icons.map),
+              label: 'Map',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.ev_station_outlined),
+              selectedIcon: Icon(Icons.ev_station),
+              label: 'Stations',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.calendar_today_outlined),
+              selectedIcon: Icon(Icons.calendar_today),
+              label: 'Bookings',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -137,7 +152,7 @@ class _HomeContent extends StatelessWidget {
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                              builder: (_) => const CalculatorScreen()),
+                              builder: (_) => const ChargingCalculatorScreen()),
                         );
                       },
                     ),
@@ -203,22 +218,6 @@ class _HomeContent extends StatelessWidget {
             const SizedBox(height: 24),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class CalculatorScreen extends StatelessWidget {
-  const CalculatorScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Charging Calculator'),
-      ),
-      body: const Center(
-        child: Text('Charging Calculator Screen'),
       ),
     );
   }
